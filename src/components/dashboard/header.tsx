@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { User, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Sidebar } from "./sidebar"
 import { createClient } from "@/lib/supabase/client"
 import { useEffect, useState } from "react"
@@ -38,6 +38,8 @@ export function Header() {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="flex flex-col p-0 w-72">
+                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
+                        <SheetDescription className="sr-only">Main navigation menu for the dashboard</SheetDescription>
                         <Sidebar role={role} />
                     </SheetContent>
                 </Sheet>
