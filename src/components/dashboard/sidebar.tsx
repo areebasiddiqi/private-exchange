@@ -98,7 +98,7 @@ export function Sidebar({ role }: { role: string }) {
     const links = allLinks.filter(link => link.roles.includes(role))
 
     return (
-        <div className="hidden border-r bg-muted/40 md:flex md:h-full md:w-64 md:flex-col">
+        <div className="flex h-full w-full flex-col bg-muted/40">
             <div className="flex h-14 items-center border-b px-6 font-semibold">
                 Private Money Exchange
             </div>
