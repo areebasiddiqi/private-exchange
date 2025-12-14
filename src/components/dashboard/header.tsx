@@ -28,7 +28,7 @@ export function Header() {
     }, [])
 
     return (
-        <header className="flex h-14 items-center justify-between border-b bg-muted/40 px-6 lg:h-[60px]">
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
             <div className="flex items-center gap-4">
                 <Sheet>
                     <SheetTrigger asChild>

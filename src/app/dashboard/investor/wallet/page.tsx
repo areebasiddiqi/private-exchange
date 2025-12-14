@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createStripeCheckout } from "@/app/actions/stripe"
 import { Wallet, ArrowUpRight, ArrowDownLeft } from "lucide-react"
+import { Counter } from "@/components/ui/counter"
 
 export default async function InvestorWalletPage() {
     const supabase = await createClient()
@@ -37,7 +38,9 @@ export default async function InvestorWalletPage() {
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-4xl font-bold">${wallet?.balance?.toLocaleString() || "0.00"}</div>
+                        <div className="text-4xl font-bold">
+                            <Counter value={wallet?.balance || 0} />
+                        </div>
                         <p className="text-sm text-muted-foreground mt-2">
                             Available for investment
                         </p>

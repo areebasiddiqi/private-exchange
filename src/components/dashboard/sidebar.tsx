@@ -98,8 +98,8 @@ export function Sidebar({ role }: { role: string }) {
     const links = allLinks.filter(link => link.roles.includes(role))
 
     return (
-        <div className="flex h-full w-full flex-col bg-muted/40">
-            <div className="flex h-14 items-center border-b px-6 font-semibold">
+        <div className="flex h-full w-full flex-col bg-background border-r border-border/50">
+            <div className="flex h-16 items-center border-b border-border/50 px-6 font-semibold font-heading tracking-tight text-lg">
                 Private Money Exchange
             </div>
             <div className="flex-1 overflow-auto py-4">
@@ -111,10 +111,10 @@ export function Sidebar({ role }: { role: string }) {
                                 key={link.href}
                                 href={link.href}
                                 className={cn(
-                                    "flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary",
+                                    "group flex items-center gap-3 rounded-lg px-3 py-2 transition-all duration-300 hover:text-primary hover:pl-4",
                                     pathname === link.href
-                                        ? "bg-muted text-primary"
-                                        : "text-muted-foreground"
+                                        ? "bg-gradient-to-r from-primary/10 to-transparent text-primary border-l-2 border-primary shadow-[0_0_20px_rgba(124,58,237,0.1)]"
+                                        : "text-muted-foreground hover:bg-muted/50"
                                 )}
                             >
                                 <Icon className="h-4 w-4" />
@@ -133,6 +133,6 @@ export function Sidebar({ role }: { role: string }) {
                     Sign Out
                 </button>
             </div>
-        </div>
+        </div >
     )
 }

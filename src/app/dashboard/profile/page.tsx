@@ -50,9 +50,9 @@ export default async function ProfilePage() {
 
     return (
         <div className="flex flex-col gap-6 max-w-3xl mx-auto">
-            <h1 className="text-3xl font-bold tracking-tight">Profile Settings</h1>
+            <h1 className="text-3xl font-bold tracking-tight font-heading">Profile Settings</h1>
 
-            <Card>
+            <Card className="shadow-sm border-border/50">
                 <CardHeader>
                     <CardTitle>Account Information</CardTitle>
                 </CardHeader>
@@ -98,7 +98,7 @@ export default async function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-sm border-border/50">
                 <CardHeader>
                     <CardTitle>Personal Information</CardTitle>
                 </CardHeader>
@@ -140,7 +140,7 @@ export default async function ProfilePage() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card className="shadow-sm border-border/50">
                 <CardHeader>
                     <CardTitle>Account Details</CardTitle>
                 </CardHeader>
