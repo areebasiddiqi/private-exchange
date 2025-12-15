@@ -11,24 +11,21 @@ export default async function DashboardPage() {
         redirect("/login")
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single()
 
-    if (profile?.role === "lender") {
-        redirect("/dashboard/lender")
-    } else if (profile?.role === "investor") {
-        redirect("/dashboard/investor") // Will implement later
-    } else if (profile?.role === "admin") {
-        redirect("/dashboard/admin") // Will implement later
-    }
+    // Debug: log what we got
+    console.log("Dashboard redirect - user:", user.id, "profile:", profile, "error:", error)
 
-    return (
-        <div>
-            <h1>Dashboard</h1>
-            <p>Redirecting...</p>
-        </div>
-    )
+    if (profile?.role === "admin") {
+        redirect("/dashboard/admin")
+    } else if (profile?.role === "lender") {
+        redirect("/dashboard/lender")
+    } else {
+        // Default to investor dashboard (handles 'investor' role and any fallback)
+        redirect("/dashboard/investor")
+    }
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { User, Menu } from "lucide-react"
+import { User, Menu, Bell } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 import { Sidebar } from "./sidebar"
@@ -10,29 +10,35 @@ import { useEffect, useState } from "react"
 
 export function Header() {
     const [role, setRole] = useState<string>("")
+    const [userName, setUserName] = useState<string>("")
+    const [userEmail, setUserEmail] = useState<string>("")
     const supabase = createClient()
 
     useEffect(() => {
-        async function getRole() {
+        async function getUserInfo() {
             const { data: { user } } = await supabase.auth.getUser()
             if (user) {
+                setUserEmail(user.email || "")
                 const { data: profile } = await supabase
                     .from("profiles")
-                    .select("role")
+                    .select("role, full_name")
                     .eq("id", user.id)
                     .single()
-                if (profile) setRole(profile.role)
+                if (profile) {
+                    setRole(profile.role)
+                    setUserName(profile.full_name || user.email?.split("@")[0] || "User")
+                }
             }
         }
-        getRole()
+        getUserInfo()
     }, [])
 
     return (
-        <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-6">
+        <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
             <div className="flex items-center gap-4">
                 <Sheet>
                     <SheetTrigger asChild>
-                        <Button variant="outline" size="icon" className="shrink-0 md:hidden">
+                        <Button variant="outline" size="icon" className="shrink-0 lg:hidden">
                             <Menu className="h-5 w-5" />
                             <span className="sr-only">Toggle navigation menu</span>
                         </Button>
@@ -43,14 +49,20 @@ export function Header() {
                         <Sidebar role={role} />
                     </SheetContent>
                 </Sheet>
-                <div className="w-full flex-1 md:w-auto md:flex-none">
-                    {/* Add search or breadcrumbs here if needed */}
+                <div className="hidden lg:block">
+                    <p className="text-sm text-gray-600">
+                        {role === "admin" ? "Admin Portal" : role === "lender" ? "Lender Portal" : "Investor Portal"}
+                    </p>
                 </div>
             </div>
             <div className="flex items-center gap-4">
+                <div className="hidden sm:block text-right">
+                    <p className="font-medium text-gray-900 text-sm">{userName}</p>
+                    <p className="text-xs text-gray-600">{userEmail}</p>
+                </div>
                 <Link href="/dashboard/profile">
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                        <User className="h-5 w-5" />
+                    <Button variant="ghost" size="icon" className="rounded-full bg-gray-100 hover:bg-gray-200">
+                        <User className="h-5 w-5 text-gray-600" />
                         <span className="sr-only">Profile</span>
                     </Button>
                 </Link>

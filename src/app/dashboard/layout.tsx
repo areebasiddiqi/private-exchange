@@ -1,7 +1,6 @@
-import { Sidebar } from "@/components/dashboard/sidebar"
-import { Header } from "@/components/dashboard/header"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 
 export default async function DashboardLayout({
     children,
@@ -17,21 +16,22 @@ export default async function DashboardLayout({
 
     const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, full_name")
         .eq("id", user.id)
         .single()
 
     return (
-        <div className="grid min-h-screen w-full lg:grid-cols-[280px_1fr]">
-            <div className="hidden border-r bg-muted/40 lg:block">
-                <Sidebar role={profile?.role || "investor"} />
-            </div>
-            <div className="flex flex-col">
-                <Header />
-                <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
-                    {children}
-                </main>
-            </div>
+        <div className="min-h-screen bg-gray-50">
+            <DashboardHeader
+                user={{
+                    name: profile?.full_name || user.email?.split("@")[0] || "User",
+                    email: user.email || "",
+                    role: profile?.role || "investor"
+                }}
+            />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                {children}
+            </main>
         </div>
     )
 }

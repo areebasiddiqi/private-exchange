@@ -7,12 +7,12 @@ import { createClient } from "@/lib/supabase/client"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
-import { Loader2 } from "lucide-react"
+import { Loader2, ArrowLeft } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
 const formSchema = z.object({
     email: z.string().email({
@@ -62,25 +62,42 @@ export default function LoginPage() {
     }
 
     return (
-        <div className="container flex h-screen w-screen flex-col items-center justify-center">
-            <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-                <div className="flex flex-col space-y-2 text-center">
-                    <h1 className="text-2xl font-semibold tracking-tight">
-                        Welcome back
+        <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white flex items-center justify-center px-4">
+            <div className="w-full max-w-md space-y-8">
+                <div className="text-center">
+                    <Button
+                        variant="ghost"
+                        asChild
+                        className="mb-8"
+                    >
+                        <Link href="/">
+                            <ArrowLeft className="mr-2 size-4" />
+                            Back to Home
+                        </Link>
+                    </Button>
+                    <h1 className="text-4xl font-bold text-gray-900">
+                        Private Money Exchange
                     </h1>
-                    <p className="text-sm text-muted-foreground">
-                        Enter your email to sign in to your account
+                    <p className="text-gray-600 mt-2">
+                        Sign in to your account
                     </p>
                 </div>
-                <div className={cn("grid gap-6")}>
-                    <form onSubmit={form.handleSubmit(onSubmit)}>
-                        <div className="grid gap-4">
-                            <div className="grid gap-2">
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Login</CardTitle>
+                        <CardDescription>
+                            Enter your credentials to access your account
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                            <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input
                                     id="email"
-                                    placeholder="name@example.com"
                                     type="email"
+                                    placeholder="your@email.com"
                                     autoCapitalize="none"
                                     autoComplete="email"
                                     autoCorrect="off"
@@ -93,11 +110,12 @@ export default function LoginPage() {
                                     </p>
                                 )}
                             </div>
-                            <div className="grid gap-2">
+                            <div className="space-y-2">
                                 <Label htmlFor="password">Password</Label>
                                 <Input
                                     id="password"
                                     type="password"
+                                    placeholder="Enter your password"
                                     autoCapitalize="none"
                                     autoComplete="current-password"
                                     disabled={isLoading}
@@ -110,22 +128,55 @@ export default function LoginPage() {
                                 )}
                             </div>
                             {error && <p className="text-sm text-red-500">{error}</p>}
-                            <Button disabled={isLoading}>
+                            <Button
+                                type="submit"
+                                className="w-full"
+                                disabled={isLoading}
+                            >
                                 {isLoading && (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                 )}
                                 Sign In
                             </Button>
+                        </form>
+
+                        <div className="relative my-6">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300"></div>
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="px-2 bg-white text-gray-500">New to the platform?</span>
+                            </div>
                         </div>
-                    </form>
-                </div>
-                <p className="px-8 text-center text-sm text-muted-foreground">
-                    <Link
-                        href="/signup"
-                        className="hover:text-brand underline underline-offset-4"
-                    >
-                        Don&apos;t have an account? Sign Up
-                    </Link>
+
+                        <div className="space-y-3">
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href="/signup?type=investor">
+                                    Sign Up as Investor
+                                </Link>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full"
+                                asChild
+                            >
+                                <Link href="/signup?type=lender">
+                                    Sign Up as Lender
+                                </Link>
+                            </Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <p className="text-center text-sm text-gray-500">
+                    By signing in, you agree to our{" "}
+                    <Link href="#" className="underline hover:text-gray-700">Terms of Service</Link>
+                    {" "}and{" "}
+                    <Link href="#" className="underline hover:text-gray-700">Privacy Policy</Link>
                 </p>
             </div>
         </div>
