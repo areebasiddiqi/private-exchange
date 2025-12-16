@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { stripe } from "@/lib/stripe"
 import { redirect } from "next/navigation"
 
-export async function createStripeCheckout(amount: number) {
+export async function createStripeCheckout(amount: number, returnPath?: string) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -15,6 +15,15 @@ export async function createStripeCheckout(amount: number) {
     if (!amount || amount < 100) {
         throw new Error("Minimum deposit is $100")
     }
+
+    // Get user's role to determine redirect path
+    const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single()
+
+    const dashboardPath = returnPath || (profile?.role === 'lender' ? '/dashboard/lender' : '/dashboard/investor/wallet')
 
     try {
         // Create Stripe Checkout Session
@@ -34,8 +43,8 @@ export async function createStripeCheckout(amount: number) {
                 },
             ],
             mode: 'payment',
-            success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/investor/wallet?success=true`,
-            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/dashboard/investor/wallet?canceled=true`,
+            success_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${dashboardPath}?success=true`,
+            cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}${dashboardPath}?canceled=true`,
             metadata: {
                 user_id: user.id,
                 amount: amount.toString(),

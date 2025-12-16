@@ -423,7 +423,72 @@ export default function AdminDashboardPage() {
                 // Continue anyway, transaction record is for history
             }
 
-            // 4. Update pending_transaction status to approved
+            // 4. Add funds to lender's wallet
+            const { data: lenderWallet } = await supabase
+                .from("wallets")
+                .select("balance")
+                .eq("user_id", deal.lender_id)
+                .single()
+
+            if (lenderWallet) {
+                // Update existing wallet
+                const { error: lenderWalletError } = await supabase
+                    .from("wallets")
+                    .update({ balance: lenderWallet.balance + amount, updated_at: new Date().toISOString() })
+                    .eq("user_id", deal.lender_id)
+
+                if (lenderWalletError) {
+                    console.error("Error adding to lender wallet:", lenderWalletError)
+                }
+            } else {
+                // Create wallet for lender if doesn't exist
+                const { error: createWalletError } = await supabase
+                    .from("wallets")
+                    .insert({ user_id: deal.lender_id, balance: amount })
+
+                if (createWalletError) {
+                    console.error("Error creating lender wallet:", createWalletError)
+                }
+            }
+
+            // 5. Create transaction record for the lender (inflow)
+            const { error: lenderTransactionError } = await supabase
+                .from("transactions")
+                .insert({
+                    user_id: deal.lender_id,
+                    type: "investment",
+                    amount: amount,
+                    status: "completed",
+                    reference_id: deal_id
+                })
+
+            if (lenderTransactionError) {
+                console.error("Error creating lender transaction:", lenderTransactionError)
+            }
+
+            // 6. Check if deal is fully funded and update status
+            const { data: totalInvestments } = await supabase
+                .from("investments")
+                .select("amount")
+                .eq("deal_id", deal_id)
+                .eq("status", "completed")
+
+            const totalInvested = totalInvestments?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0
+
+            const { data: dealInfo } = await supabase
+                .from("deals")
+                .select("loan_amount")
+                .eq("id", deal_id)
+                .single()
+
+            if (dealInfo && totalInvested >= dealInfo.loan_amount) {
+                await supabase
+                    .from("deals")
+                    .update({ status: "funded", updated_at: new Date().toISOString() })
+                    .eq("id", deal_id)
+            }
+
+            // 7. Update pending_transaction status to approved
             const { error: updateError } = await supabase
                 .from("pending_transactions")
                 .update({ status: "approved" })
@@ -433,7 +498,7 @@ export default function AdminDashboardPage() {
                 console.error("Error updating pending transaction:", updateError)
             }
 
-            alert("Investment approved successfully! Funds have been deducted from investor wallet.")
+            alert("Investment approved successfully! Funds transferred from investor to lender wallet.")
             loadData()
         } catch (error) {
             console.error("Error approving investment:", error)
@@ -634,7 +699,7 @@ export default function AdminDashboardPage() {
         }
     }
 
-    const pendingDeals = deals.filter(d => d.status === "pending" || d.status === "submitted")
+    const pendingDeals = deals.filter(d => d.status === "submitted")
     const approvedDeals = deals.filter(d => d.status === "approved")
     const fundedDeals = deals.filter(d => d.status === "funded" || d.status === "active")
     const pendingUsers = users.filter(u => u.verification_status === "pending")
@@ -882,7 +947,7 @@ export default function AdminDashboardPage() {
                                                 <td className="p-4 align-middle">{getStatusBadge(deal.status)}</td>
                                                 <td className="p-4 align-middle">
                                                     <div className="flex gap-2">
-                                                        {(deal.status === "pending" || deal.status === "submitted") && (
+                                                        {deal.status === "submitted" && (
                                                             <>
                                                                 <Button size="sm" onClick={() => handleApproveDeal(deal.id)}>
                                                                     <CheckCircle className="mr-1 size-3" />

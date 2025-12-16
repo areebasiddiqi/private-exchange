@@ -16,6 +16,7 @@ export default function RepayLoanPage() {
     const dealId = params.id as string
 
     const [deal, setDeal] = useState<any>(null)
+    const [walletBalance, setWalletBalance] = useState<number>(0)
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -30,18 +31,35 @@ export default function RepayLoanPage() {
     const loadDeal = async () => {
         try {
             setLoading(true)
-            const { data: dealData, error: dealError } = await supabase
-                .from("deals")
-                .select("*")
-                .eq("id", dealId)
-                .single()
 
-            if (dealError || !dealData) {
+            // Get current user
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                setError("Please log in to view this page")
+                return
+            }
+
+            // Load deal and wallet balance in parallel
+            const [dealResult, walletResult] = await Promise.all([
+                supabase
+                    .from("deals")
+                    .select("*")
+                    .eq("id", dealId)
+                    .single(),
+                supabase
+                    .from("wallets")
+                    .select("balance")
+                    .eq("user_id", user.id)
+                    .single()
+            ])
+
+            if (dealResult.error || !dealResult.data) {
                 setError("Deal not found")
                 return
             }
 
-            setDeal(dealData)
+            setDeal(dealResult.data)
+            setWalletBalance(walletResult.data?.balance || 0)
         } catch (err) {
             console.error("Error loading deal:", err)
             setError("Failed to load deal")
@@ -67,6 +85,20 @@ export default function RepayLoanPage() {
             const principal = Number(deal.loan_amount)
             const interest = principal * (Number(deal.interest_rate) / 100) * (deal.term_months / 12)
             const totalDue = principal + interest
+
+            // Check wallet balance before submitting
+            const { data: walletData } = await supabase
+                .from("wallets")
+                .select("balance")
+                .eq("user_id", user.id)
+                .single()
+
+            const currentBalance = walletData?.balance || 0
+            if (currentBalance < totalDue) {
+                setError(`Insufficient wallet balance. You need $${totalDue.toLocaleString(undefined, { maximumFractionDigits: 2 })} but only have $${currentBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}. Please add funds to your wallet first.`)
+                setSubmitting(false)
+                return
+            }
 
             // Create pending transaction for admin approval
             const { error: insertError } = await supabase
@@ -173,6 +205,20 @@ export default function RepayLoanPage() {
                             </span>
                         </div>
                     </div>
+
+                    <div className="border-t pt-4 mt-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-500">Your Wallet Balance</span>
+                            <span className={`text-lg font-semibold ${walletBalance >= totalDue ? 'text-green-600' : 'text-red-600'}`}>
+                                ${walletBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                            </span>
+                        </div>
+                        {walletBalance < totalDue && (
+                            <div className="mt-2 text-sm text-red-600 bg-red-50 p-2 rounded">
+                                Insufficient balance. You need ${(totalDue - walletBalance).toLocaleString(undefined, { maximumFractionDigits: 2 })} more to repay this loan.
+                            </div>
+                        )}
+                    </div>
                 </CardContent>
             </Card>
 
@@ -214,13 +260,15 @@ export default function RepayLoanPage() {
                                 type="submit"
                                 className="w-full bg-blue-600 hover:bg-blue-700"
                                 size="lg"
-                                disabled={submitting}
+                                disabled={submitting || walletBalance < totalDue}
                             >
                                 {submitting ? (
                                     <>
                                         <Loader2 className="mr-2 size-4 animate-spin" />
                                         Processing...
                                     </>
+                                ) : walletBalance < totalDue ? (
+                                    "Insufficient Balance"
                                 ) : (
                                     "Confirm Repayment"
                                 )}

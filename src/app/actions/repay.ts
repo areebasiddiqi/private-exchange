@@ -15,6 +15,18 @@ export async function repayLoan(dealId: string, amount: number) {
         throw new Error("Unauthorized")
     }
 
+    // Check wallet balance before creating repayment request
+    const { data: walletData } = await supabase
+        .from("wallets")
+        .select("balance")
+        .eq("user_id", user.id)
+        .single()
+
+    const currentBalance = walletData?.balance || 0
+    if (currentBalance < amount) {
+        throw new Error(`Insufficient wallet balance. You need $${amount.toLocaleString(undefined, { maximumFractionDigits: 2 })} but only have $${currentBalance.toLocaleString(undefined, { maximumFractionDigits: 2 })}.`)
+    }
+
     // Create pending transaction for admin approval
     const { error } = await supabase
         .from("pending_transactions")
